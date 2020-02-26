@@ -8,7 +8,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.firestore.util.await
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
+@ExperimentalCoroutinesApi
 class MainActivity : AppCompatActivity() {
 
 
@@ -16,6 +18,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
 
         val viewModel = ViewModelProvider(this).get(MainViewModel::class.java)
         viewModel.livedata.observe(this, Observer {

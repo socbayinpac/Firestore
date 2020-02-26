@@ -12,7 +12,7 @@ import kotlin.coroutines.resumeWithException
  * Converts this task to an instance of [Deferred].
  * If task is cancelled then resulting deferred will be cancelled as well.
  */
-public fun <T> Task<T>.asDeferred(): Deferred<T> {
+public fun <T> Task<T>.asDeferred(): Deferred<T> { // chuyen tu callback sang deferred
     if (isComplete) {
         val e = exception
         return if (e == null) {
@@ -50,12 +50,13 @@ public suspend fun <T> Task<T>.await(): T {
                 throw CancellationException("Task $this was cancelled normally.")
             } else {
                 @Suppress("UNCHECKED_CAST")
-                result as T
+                result as T // return lai ket qua khi k co exc, va k cancle
             }
         } else {
             throw e
         }
     }
+
     return suspendCancellableCoroutine { cont ->
         addOnCompleteListener {
             val e = exception
@@ -67,4 +68,5 @@ public suspend fun <T> Task<T>.await(): T {
             }
         }
     }
+
 }
