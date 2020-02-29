@@ -1,38 +1,40 @@
 package com.example.firestore
 
-import com.example.firestore.util.await
+import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.sendBlocking
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class Firestore {
 
-    // tang
-    suspend fun getData() : Data? {
-        var snapshot: DocumentSnapshot? = null
-        try {
-           snapshot = FirebaseFirestore.getInstance().document("datas/data1").get().await()
-        } catch(e: Exception) {
-            snapshot = null
-        }
 
-        return snapshot?.toObject(Data::class.java) // null la doc k ton tai
-
+    // lấy data một lần bằng suspendCancellableCoroutine
+    suspend fun getData() = suspendCancellableCoroutine<Data?> { cont ->
+        FirebaseFirestore.getInstance().document("datas/data1").get()
+            .addOnSuccessListener {
+                // thích làm gì ở đây làm
+                cont.resume(it.toObject(Data::class.java)) // trả data về (hoạt động như return)
+            }
+            .addOnCanceledListener {
+                // thích làm gì ở đây làm
+                cont.cancel() // hủy
+            }
+            .addOnFailureListener {
+                // thích làm gì ở đây làm
+                cont.resumeWithException(it) // quăng exception
+            }
     }
 
-
-     @ExperimentalCoroutinesApi
-     fun getDataFlow(): Flow<Data?> =
-         channelFlow {
+    // lấy data thời gian thực bằng flow
+    @ExperimentalCoroutinesApi
+    fun getDataFlow(): Flow<Data?> =
+        channelFlow {
             val subscription = FirebaseFirestore.getInstance().document("datas/data1")
                 .addSnapshotListener { snapshot: DocumentSnapshot?, e ->
                     if (e != null) {
@@ -54,26 +56,7 @@ class Firestore {
             awaitClose { subscription.remove() } // nó sẽ xem livedata khi nào k hoạt động nữa thì nó cũng nghỉ
         }
 
-// 1/ tạo flow bằng hàm channelFlow , rồi truyền vào lambda chạy code, trong đó có bắn dữ liệu
-    // flow builder , ham nay
-@ExperimentalCoroutinesApi // thu vien dang beta, co kha noi
-fun checkLogin() : Flow<Boolean> =  channelFlow {
-        FirebaseFirestore.getInstance().collection("").get()
-            .addOnSuccessListener {
-                for (snapshot in it) {
-                    if (snapshot.exists()) {
-                        channel.offer(true) // no ban
-                        break
-                    }
-
-                }
-            }
-    }
-
-
-
-
-    }
+}
 
 
 

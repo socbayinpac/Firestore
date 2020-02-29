@@ -43,4 +43,6 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:2.2.0"
 
   //  implementation "io.reactivex.rxjava3:rxjava:3.0.0"
+
+    implementation 'com.github.brotoo25:firestore-coroutines:1.0.0'
 }

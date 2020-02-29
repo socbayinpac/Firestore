@@ -41,32 +41,32 @@ public fun <T> Task<T>.asDeferred(): Deferred<T> { // chuyen tu callback sang de
  * If the [Job] of the current coroutine is cancelled or completed while this suspending function is waiting, this function
  * stops waiting for the completion stage and immediately resumes with [CancellationException].
  */
-public suspend fun <T> Task<T>.await(): T {
-    // fast path
-    if (isComplete) {
-        val e = exception
-        return if (e == null) {
-            if (isCanceled) {
-                throw CancellationException("Task $this was cancelled normally.")
-            } else {
-                @Suppress("UNCHECKED_CAST")
-                result as T // return lai ket qua khi k co exc, va k cancle
-            }
-        } else {
-            throw e
-        }
-    }
-
-    return suspendCancellableCoroutine { cont ->
-        addOnCompleteListener {
-            val e = exception
-            if (e == null) {
-                @Suppress("UNCHECKED_CAST")
-                if (isCanceled) cont.cancel() else cont.resume(result as T)
-            } else {
-                cont.resumeWithException(e)
-            }
-        }
-    }
-
-}
+//public suspend fun <T> Task<T>.await(): T {
+//    // fast path
+//    if (isComplete) {
+//        val e = exception
+//        return if (e == null) {
+//            if (isCanceled) {
+//                throw CancellationException("Task $this was cancelled normally.")
+//            } else {
+//                @Suppress("UNCHECKED_CAST")
+//                result as T // return lai ket qua khi k co exc, va k cancle
+//            }
+//        } else {
+//            throw e
+//        }
+//    }
+//
+//    return suspendCancellableCoroutine { cont ->
+//        addOnCompleteListener {
+//            val e = exception
+//            if (e == null) {
+//                @Suppress("UNCHECKED_CAST")
+//                if (isCanceled) cont.cancel() else cont.resume(result as T)
+//            } else {
+//                cont.resumeWithException(e)
+//            }
+//        }
+//    }
+//
+//}
