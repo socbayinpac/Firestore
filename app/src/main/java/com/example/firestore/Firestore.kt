@@ -2,6 +2,7 @@ package com.example.firestore
 
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -30,7 +31,6 @@ class Firestore {
                 cont.resumeWithException(it) // quăng exception
             }
     }
-
     // lấy data thời gian thực bằng flow
     @ExperimentalCoroutinesApi
     fun getDataFlow(): Flow<Data?> =
@@ -44,17 +44,69 @@ class Firestore {
 
                     if (snapshot != null && snapshot.exists()) {
                         val book = snapshot.toObject(Data::class.java)
-                        book?.let {
-                            channel.offer(it)
+                        book?.let {data ->
+                            channel.offer(data)
                         }
                     } else {
                         channel.offer(null)
                     }
                 }
-
             // bỏ dòng ngừng ,data stream , ở firestore là lấy biến listenr registration chấm remove
-            awaitClose { subscription.remove() } // nó sẽ xem livedata khi nào k hoạt động nữa thì nó cũng nghỉ
+            awaitClose { subscription.remove() }  // nó sẽ xem livedata khi nào k hoạt động nữa thì nó cũng nghỉ
         }
+
+
+    fun updateManyField() {
+
+
+    }
+
+    suspend fun addData(data: Data) = suspendCancellableCoroutine<Boolean> { cont ->
+        val docRef = FirebaseFirestore.getInstance().document("")
+        docRef.get()
+            .addOnSuccessListener {
+                if (!it.exists()) {
+                    docRef.set(data)
+                    cont.resume(true)
+                }
+                cont.resume(false)
+            }
+            .addOnFailureListener {
+                cont.resume(true)
+            }
+    }
+
+
+    fun muaItem() {
+        val accTrai = FirebaseFirestore.getInstance().document("accountT")
+        val accPhai = FirebaseFirestore.getInstance().document("accountP")
+        val db = FirebaseFirestore.getInstance()
+        db.runTransaction { transaction ->
+            val soDuHienTaiT = transaction.get(accTrai).get("tien") as Int
+             transaction.update(accPhai,"tien",soDuHienTaiT-2) // tru tien trai
+
+            val soDuHienTaiP = transaction.get(accPhai).get("tien") as Int
+            transaction.update(accPhai,"tien",soDuHienTaiT+2)// cong tien phai
+
+            transaction.update(accPhai,"item",null) // tru item cua pahai
+            transaction.update(accTrai,"item",Any()) // cong item cua trai
+
+            true
+        }.addOnSuccessListener { isSuccess ->
+            if (isSuccess == true) {
+                // true
+
+            } else {
+                // ban false
+            }
+        }.addOnFailureListener {
+
+        }
+
+
+    }
+
+
 
 }
 
